@@ -3,66 +3,198 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Password Check Form</title>
+    <title>CTF Password Challenge - Multi-Part</title>
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'primary': '#007bff',
+                        'success': '#10b981',
+                        'error': '#ef4444',
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            padding: 20px;
-            background-color: #f4f4f4;
-        }
-        .container {
-            background-color: #fff;
-            padding: 30px;
-            border-radius: 8px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-            max-width: 400px;
-            margin: 0 auto;
-        }
-        label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: bold;
-        }
-        input[type="password"] {
-            width: 100%;
-            padding: 10px;
-            margin-bottom: 20px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            box-sizing: border-box; /* Ensures padding doesn't affect total width */
-        }
-        button {
-            background-color: #007bff;
-            color: white;
-            padding: 10px 15px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 16px;
-            width: 100%;
-        }
-        button:hover {
-            background-color: #0056b3;
-        }
+        /* Ensuring Inter font loads */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
     </style>
 </head>
-<body>
+<body class="bg-gray-100 min-h-screen flex items-center justify-center p-4 font-sans">
 
-<div class="container">
-    <h2>Enter Passwords</h2>
+<div class="container bg-white p-8 rounded-xl shadow-2xl w-full max-w-sm">
+    <h2 class="text-3xl font-bold text-center mb-6 text-gray-800">CTF Challenge: Multi-Part Password</h2>
 
-    <form action="YOUR_BACKEND_ENDPOINT_URL_HERE" method="POST">
+    <!-- Form will be intercepted by JavaScript -->
+    <form id="passwordForm" class="space-y-4">
         
-        <label for="password_one">Password One:</label>
-        <input type="password" id="password_one" name="password_one" required>
+        <label for="password_one" class="block text-sm font-medium text-gray-700">Password Part 1:</label>
+        <input 
+            type="password" 
+            id="password_one" 
+            name="password_one" 
+            placeholder="First secret segment"
+            required 
+            class="w-full p-3 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary transition duration-150 ease-in-out"
+        >
 
-        <label for="password_two">Password Two:</label>
-        <input type="password" id="password_two" name="password_two" required>
+        <label for="password_two" class="block text-sm font-medium text-gray-700">Password Part 2:</label>
+        <input 
+            type="password" 
+            id="password_two" 
+            name="password_two" 
+            placeholder="Second secret segment"
+            required 
+            class="w-full p-3 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary transition duration-150 ease-in-out"
+        >
 
-        <button type="submit">Submit and Check Passwords</button>
+        <label for="password_three" class="block text-sm font-medium text-gray-700">Password Part 3:</label>
+        <input 
+            type="password" 
+            id="password_three" 
+            name="password_three" 
+            placeholder="Third secret segment"
+            required 
+            class="w-full p-3 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary transition duration-150 ease-in-out"
+        >
 
+        <button 
+            type="submit" 
+            id="submitButton"
+            class="w-full bg-primary text-white font-semibold py-3 px-4 rounded-lg hover:bg-blue-700 transition duration-300 ease-in-out shadow-md hover:shadow-lg"
+        >
+            <span id="buttonText">Concatenate and Check</span>
+            <svg id="spinner" class="animate-spin -ml-1 mr-3 h-5 w-5 text-white hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+        </button>
     </form>
+    
+    <!-- Message Display Area -->
+    <div id="messageContainer" class="mt-6 p-3 rounded-lg text-center hidden" role="alert">
+        <p id="messageText" class="font-medium"></p>
+    </div>
 </div>
+
+<script>
+    // Constants
+    const API_BASE_URL = "https://gpteopardy-backend-service.onrender.com";
+    const API_ENDPOINT = "/check_password/"; // The concatenated password will be appended as a path parameter
+
+    // DOM Elements
+    const form = document.getElementById('passwordForm');
+    const passwordOneInput = document.getElementById('password_one');
+    const passwordTwoInput = document.getElementById('password_two');
+    const passwordThreeInput = document.getElementById('password_three');
+    const submitButton = document.getElementById('submitButton');
+    const buttonText = document.getElementById('buttonText');
+    const spinner = document.getElementById('spinner');
+    const messageContainer = document.getElementById('messageContainer');
+    const messageText = document.getElementById('messageText');
+
+    /**
+     * Handles the form submission to call the GET API endpoint.
+     * @param {Event} e - The form submission event.
+     */
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        // Reset previous messages
+        messageContainer.classList.add('hidden');
+        messageContainer.className = 'mt-6 p-3 rounded-lg text-center';
+
+        const p1 = passwordOneInput.value.trim();
+        const p2 = passwordTwoInput.value.trim();
+        const p3 = passwordThreeInput.value.trim();
+
+        // Check if all fields are filled
+        if (!p1 || !p2 || !p3) {
+            showMessage('Please enter all three parts of the password.', 'error');
+            return;
+        }
+
+        // Concatenate the three parts into a single password string
+        const concatenatedPassword = p1 + p2 + p3;
+
+        // Show loading state
+        setLoading(true);
+
+        // Construct the full URL with the concatenated password as a path parameter
+        const fullUrl = `${API_BASE_URL}${API_ENDPOINT}${encodeURIComponent(concatenatedPassword)}`;
+
+        try {
+            // Use fetch with the GET method (which is the default)
+            const response = await fetch(fullUrl, {
+                method: 'GET',
+                // No need for headers like Content-Type for a simple GET request
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                // HTTP Status 200 (Success)
+                showMessage(data.message || 'Access granted! Redirecting...', 'success');
+                
+                // Redirect the user after a short delay
+                if (data.redirect_url) {
+                    setTimeout(() => {
+                        window.location.href = data.redirect_url;
+                    }, 1500); // 1.5 second delay
+                }
+            } else {
+                // HTTP Status 401 (Unauthorized/Failure)
+                // Display the error message from the backend
+                showMessage(data.message || 'Password incorrect. Try again.', 'error');
+            }
+
+        } catch (error) {
+            console.error("API Fetch Error:", error);
+            showMessage('A network error occurred. Check the console.', 'error');
+        } finally {
+            // Hide loading state
+            setLoading(false);
+        }
+    });
+
+    /**
+     * Sets the loading state for the button.
+     * @param {boolean} isLoading 
+     */
+    function setLoading(isLoading) {
+        submitButton.disabled = isLoading;
+        buttonText.classList.toggle('hidden', isLoading);
+        spinner.classList.toggle('hidden', !isLoading);
+        submitButton.classList.toggle('opacity-50', isLoading);
+    }
+
+    /**
+     * Displays a message to the user in the designated container.
+     * @param {string} message - The text to display.
+     * @param {('success'|'error')} type - The type of message for styling.
+     */
+    function showMessage(message, type) {
+        messageText.textContent = message;
+        
+        // Ensure only one background class is applied
+        messageContainer.classList.remove('bg-success', 'bg-error');
+
+        if (type === 'success') {
+            messageContainer.classList.add('bg-success', 'text-white');
+        } else if (type === 'error') {
+            messageContainer.classList.add('bg-error', 'text-white');
+        }
+
+        messageContainer.classList.remove('hidden');
+    }
+</script>
 
 </body>
 </html>
