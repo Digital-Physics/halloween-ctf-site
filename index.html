@@ -1,95 +1,177 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RC CTF Halloween Challenge</title>
-    <!-- Load Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        'primary': '#007bff',
-                        'success': '#10b981',
-                        'error': '#ef4444',
-                    },
-                    fontFamily: {
-                        sans: ['Inter', 'sans-serif'],
-                    }
-                }
-            }
-        }
-    </script>
-    <style>
-        /* Ensuring Inter font loads */
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RC CTF Halloween Challenge</title>
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#007bff',
+            success: '#10b981',
+            error: '#ef4444',
+          },
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+          },
+        },
+      },
+    };
+  </script>
+
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+
+    /* Matrix background canvas */
+    #matrixCanvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: black;
+      z-index: 0;
+    }
+
+    /* Make the foreground content above the matrix */
+    .content {
+      position: relative;
+      z-index: 10;
+    }
+
+    /* Optional glow for text */
+    h2 {
+      text-shadow: 0 0 8px rgba(0, 255, 0, 0.4);
+    }
+  </style>
 </head>
-<body class="bg-gray-100 min-h-screen flex items-center justify-center p-4 font-sans">
 
-<div class="container bg-white p-8 rounded-xl shadow-2xl w-full max-w-sm">
-    <h2 class="text-3xl font-bold text-center mb-6 text-gray-800">RC CTF Halloweeen Challenge</h2>
+<body class="min-h-screen flex items-center justify-center p-4 font-sans relative overflow-hidden">
 
-    <!-- Form will be intercepted by JavaScript -->
+  <!-- Matrix Background -->
+  <canvas id="matrixCanvas"></canvas>
+
+  <!-- Foreground content -->
+  <div class="content container bg-white/90 backdrop-blur-sm p-8 rounded-xl shadow-2xl w-full max-w-sm">
+    <h2 class="text-3xl font-bold text-center mb-6 text-gray-800">
+      RC CTF Halloween Challenge
+    </h2>
+
     <form id="passwordForm" class="space-y-4">
-        
-        <label for="password_one" class="block text-sm font-medium text-gray-700">Password Part 1:</label>
-        <input 
-            type="password" 
-            id="password_one" 
-            name="password_one" 
-            placeholder="First secret segment"
-            required 
-            class="w-full p-3 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary transition duration-150 ease-in-out"
-        >
+      <label for="password_one" class="block text-sm font-medium text-gray-700">Password Part 1:</label>
+      <input
+        type="password"
+        id="password_one"
+        name="password_one"
+        placeholder="First secret segment"
+        required
+        class="w-full p-3 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary transition duration-150 ease-in-out"
+      />
 
-        <label for="password_two" class="block text-sm font-medium text-gray-700">Password Part 2:</label>
-        <input 
-            type="password" 
-            id="password_two" 
-            name="password_two" 
-            placeholder="Second secret segment"
-            required 
-            class="w-full p-3 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary transition duration-150 ease-in-out"
-        >
+      <label for="password_two" class="block text-sm font-medium text-gray-700">Password Part 2:</label>
+      <input
+        type="password"
+        id="password_two"
+        name="password_two"
+        placeholder="Second secret segment"
+        required
+        class="w-full p-3 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary transition duration-150 ease-in-out"
+      />
 
-        <label for="password_three" class="block text-sm font-medium text-gray-700">Password Part 3:</label>
-        <input 
-            type="password" 
-            id="password_three" 
-            name="password_three" 
-            placeholder="Third secret segment"
-            required 
-            class="w-full p-3 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary transition duration-150 ease-in-out"
-        >
+      <label for="password_three" class="block text-sm font-medium text-gray-700">Password Part 3:</label>
+      <input
+        type="password"
+        id="password_three"
+        name="password_three"
+        placeholder="Third secret segment"
+        required
+        class="w-full p-3 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary transition duration-150 ease-in-out"
+      />
 
-        <button 
-            type="submit" 
-            id="submitButton"
-            class="w-full bg-primary text-white font-semibold py-3 px-4 rounded-lg hover:bg-blue-700 transition duration-300 ease-in-out shadow-md hover:shadow-lg"
+      <button
+        type="submit"
+        id="submitButton"
+        class="w-full bg-primary text-white font-semibold py-3 px-4 rounded-lg hover:bg-blue-700 transition duration-300 ease-in-out shadow-md hover:shadow-lg"
+      >
+        <span id="buttonText">Concatenate and Check</span>
+        <svg
+          id="spinner"
+          class="animate-spin -ml-1 mr-3 h-5 w-5 text-white hidden"
+          xmlns="http://www.w3.org/2000/svg"
+          fill="none"
+          viewBox="0 0 24 24"
         >
-            <span id="buttonText">Concatenate and Check</span>
-            <svg id="spinner" class="animate-spin -ml-1 mr-3 h-5 w-5 text-white hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-            </svg>
-        </button>
+          <circle
+            class="opacity-25"
+            cx="12"
+            cy="12"
+            r="10"
+            stroke="currentColor"
+            stroke-width="4"
+          ></circle>
+          <path
+            class="opacity-75"
+            fill="currentColor"
+            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2
+            5.291A7.962 7.962 0 014 12H0c0 3.042 1.135
+            5.824 3 7.938l3-2.647z"
+          ></path>
+        </svg>
+      </button>
     </form>
-    
-    <!-- Message Display Area -->
+
     <div id="messageContainer" class="mt-6 p-3 rounded-lg text-center hidden" role="alert">
-        <p id="messageText" class="font-medium"></p>
+      <p id="messageText" class="font-medium"></p>
     </div>
-</div>
+  </div>
 
-<script>
-    // Constants
+  <!-- Matrix effect -->
+  <script>
+    const canvas = document.getElementById('matrixCanvas');
+    const ctx = canvas.getContext('2d');
+
+    canvas.height = window.innerHeight;
+    canvas.width = window.innerWidth;
+
+    const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%^&*()*&^%+-/~{[|`]}';
+    const fontSize = 14;
+    const columns = canvas.width / fontSize;
+    const drops = [];
+
+    for (let x = 0; x < columns; x++) drops[x] = 1;
+
+    function drawMatrix() {
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = '#0F0';
+      ctx.font = fontSize + 'px monospace';
+
+      for (let i = 0; i < drops.length; i++) {
+        const text = chars.charAt(Math.floor(Math.random() * chars.length));
+        ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+        if (drops[i] * fontSize > canvas.height && Math.random() > 0.975)
+          drops[i] = 0;
+        drops[i]++;
+      }
+    }
+
+    setInterval(drawMatrix, 33);
+    window.addEventListener('resize', () => {
+      canvas.height = window.innerHeight;
+      canvas.width = window.innerWidth;
+    });
+  </script>
+
+  <!-- Password checker script -->
+  <script>
     const API_BASE_URL = "https://gpteopardy-backend-service.onrender.com";
-    const API_ENDPOINT = "/check_password/"; // The concatenated password will be appended as a path parameter
+    const API_ENDPOINT = "/check_password/";
 
-    // DOM Elements
     const form = document.getElementById('passwordForm');
     const passwordOneInput = document.getElementById('password_one');
     const passwordTwoInput = document.getElementById('password_two');
@@ -100,101 +182,67 @@
     const messageContainer = document.getElementById('messageContainer');
     const messageText = document.getElementById('messageText');
 
-    /**
-     * Handles the form submission to call the GET API endpoint.
-     * @param {Event} e - The form submission event.
-     */
     form.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        
-        // Reset previous messages
-        messageContainer.classList.add('hidden');
-        messageContainer.className = 'mt-6 p-3 rounded-lg text-center';
+      e.preventDefault();
 
-        const p1 = passwordOneInput.value.trim();
-        const p2 = passwordTwoInput.value.trim();
-        const p3 = passwordThreeInput.value.trim();
+      messageContainer.classList.add('hidden');
+      messageContainer.className = 'mt-6 p-3 rounded-lg text-center';
 
-        // Check if all fields are filled
-        if (!p1 || !p2 || !p3) {
-            showMessage('Please enter all three parts of the password.', 'error');
-            return;
+      const p1 = passwordOneInput.value.trim();
+      const p2 = passwordTwoInput.value.trim();
+      const p3 = passwordThreeInput.value.trim();
+
+      if (!p1 || !p2 || !p3) {
+        showMessage('Please enter all three parts of the password.', 'error');
+        return;
+      }
+
+      const concatenatedPassword = p1 + p2 + p3;
+      setLoading(true);
+
+      const fullUrl = `${API_BASE_URL}${API_ENDPOINT}${encodeURIComponent(concatenatedPassword)}`;
+
+      try {
+        const response = await fetch(fullUrl);
+        const data = await response.json();
+
+        if (response.ok) {
+          showMessage(data.message || 'Access granted! Redirecting...', 'success');
+          if (data.redirect_url) {
+            setTimeout(() => {
+              window.location.href = data.redirect_url;
+            }, 1500);
+          }
+        } else {
+          showMessage(data.message || 'Password incorrect. Try again.', 'error');
         }
-
-        // Concatenate the three parts into a single password string
-        const concatenatedPassword = p1 + p2 + p3;
-
-        // Show loading state
-        setLoading(true);
-
-        // Construct the full URL with the concatenated password as a path parameter
-        const fullUrl = `${API_BASE_URL}${API_ENDPOINT}${encodeURIComponent(concatenatedPassword)}`;
-
-        try {
-            // Use fetch with the GET method (which is the default)
-            const response = await fetch(fullUrl, {
-                method: 'GET',
-                // No need for headers like Content-Type for a simple GET request
-            });
-
-            const data = await response.json();
-
-            if (response.ok) {
-                // HTTP Status 200 (Success)
-                showMessage(data.message || 'Access granted! Redirecting...', 'success');
-                
-                // Redirect the user after a short delay
-                if (data.redirect_url) {
-                    setTimeout(() => {
-                        window.location.href = data.redirect_url;
-                    }, 1500); // 1.5 second delay
-                }
-            } else {
-                // HTTP Status 401 (Unauthorized/Failure)
-                // Display the error message from the backend
-                showMessage(data.message || 'Password incorrect. Try again.', 'error');
-            }
-
-        } catch (error) {
-            console.error("API Fetch Error:", error);
-            showMessage('A network error occurred. Check the console.', 'error');
-        } finally {
-            // Hide loading state
-            setLoading(false);
-        }
+      } catch (error) {
+        console.error("API Fetch Error:", error);
+        showMessage('A network error occurred. Check the console.', 'error');
+      } finally {
+        setLoading(false);
+      }
     });
 
-    /**
-     * Sets the loading state for the button.
-     * @param {boolean} isLoading 
-     */
     function setLoading(isLoading) {
-        submitButton.disabled = isLoading;
-        buttonText.classList.toggle('hidden', isLoading);
-        spinner.classList.toggle('hidden', !isLoading);
-        submitButton.classList.toggle('opacity-50', isLoading);
+      submitButton.disabled = isLoading;
+      buttonText.classList.toggle('hidden', isLoading);
+      spinner.classList.toggle('hidden', !isLoading);
+      submitButton.classList.toggle('opacity-50', isLoading);
     }
 
-    /**
-     * Displays a message to the user in the designated container.
-     * @param {string} message - The text to display.
-     * @param {('success'|'error')} type - The type of message for styling.
-     */
     function showMessage(message, type) {
-        messageText.textContent = message;
-        
-        // Ensure only one background class is applied
-        messageContainer.classList.remove('bg-success', 'bg-error');
+      messageText.textContent = message;
+      messageContainer.classList.remove('bg-success', 'bg-error');
 
-        if (type === 'success') {
-            messageContainer.classList.add('bg-success', 'text-white');
-        } else if (type === 'error') {
-            messageContainer.classList.add('bg-error', 'text-white');
-        }
+      if (type === 'success') {
+        messageContainer.classList.add('bg-success', 'text-white');
+      } else if (type === 'error') {
+        messageContainer.classList.add('bg-error', 'text-white');
+      }
 
-        messageContainer.classList.remove('hidden');
+      messageContainer.classList.remove('hidden');
     }
-</script>
-
+  </script>
 </body>
 </html>
